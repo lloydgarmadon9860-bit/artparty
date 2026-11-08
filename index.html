@@ -62,6 +62,15 @@ label.lbl{display:block;font-weight:800;font-size:13px;text-transform:uppercase;
 .cur .ic{display:inline-block;line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));transform-origin:center}
 .cur .tag{position:absolute;left:70%;top:85%;white-space:nowrap;color:#fff;font-weight:800;font-size:12px;padding:2px 8px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .cur.me .tag{opacity:.85}
+.cur .bub{position:absolute;left:60%;bottom:110%;background:#fff;color:#2b2140;font-weight:800;font-size:13px;padding:6px 10px;border-radius:14px 14px 14px 2px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;animation:bubLife 5s forwards}
+@keyframes bubLife{0%{opacity:0;transform:scale(.6)}6%{opacity:1;transform:scale(1.05)}10%{transform:scale(1)}85%{opacity:1}100%{opacity:0}}
+.gal{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:10px 0}
+.gal figure{margin:0;background:#f6f1fd;border-radius:12px;padding:6px}
+.gal img{width:100%;border-radius:8px;display:block;background:#fff}
+.gal figcaption{font-size:11px;font-weight:800;color:var(--muted);margin-top:4px}
+.contrib{text-align:left;margin:8px auto;max-width:300px}
+.contrib div{display:flex;align-items:center;gap:6px;font-weight:800;margin:4px 0}
+.contrib .bar{height:10px;border-radius:5px;background:linear-gradient(90deg,#ff5e7e,#7b5cff)}
 .anim-bounce{animation:bounce .6s infinite alternate ease-in-out}
 .anim-spin{animation:spin 1.6s infinite linear}
 .anim-pulse{animation:pulse .8s infinite alternate ease-in-out}
@@ -77,7 +86,9 @@ label.lbl{display:block;font-weight:800;font-size:13px;text-transform:uppercase;
 #side{width:250px;background:#fff;border-left:2px solid var(--line);padding:10px;overflow-y:auto}
 #side h3{margin:10px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 .tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.tpl{background:#f6f1fd;border-radius:12px;padding:6px 2px;font-size:24px;border:2px solid transparent;display:flex;flex-direction:column;align-items:center}
+.tpl{background:#f6f1fd;border-radius:12px;padding:4px 2px;font-size:14px;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;position:relative}
+.tpl canvas{width:100%;aspect-ratio:4/3;border-radius:8px;background:#fff;display:block}
+.tpl .cnt{position:absolute;top:6px;right:6px;background:rgba(43,33,64,.7);color:#fff;font-size:9px;font-weight:800;border-radius:6px;padding:1px 4px}
 .tpl small{font-size:10px;font-weight:800;color:var(--muted)}
 .tpl.on{border-color:var(--pri);background:#ffe6ec}
 .modes{display:flex;flex-direction:column;gap:6px}
@@ -199,6 +210,9 @@ label.lbl{display:block;font-weight:800;font-size:13px;text-transform:uppercase;
    <h3>Výzva</h3>
    <button class="btn small" id="challengeBtn" style="width:100%;box-shadow:0 4px 0 #d63d5e">⏱️ Kreslíme na čas (90 s)</button>
    <div id="challengeBox" class="hidden"></div>
+   <h3>Zpráva u kurzoru 💬</h3>
+   <div class="row" style="gap:6px"><input id="msgIn" class="txt" maxlength="40" placeholder="Napiš něco…" style="flex:1;font-size:14px;padding:8px 10px"><button class="btn small alt" id="msgBtn" style="box-shadow:0 4px 0 #5a3fd6">➤</button></div>
+   <div class="row" style="gap:6px;margin-top:10px"><button class="btn ghost small" id="galBtn" style="flex:1">🖼️ Galerie</button><button class="btn ghost small" id="soundBtn">🔊</button></div>
    <h3>Reakce</h3>
    <div class="reacts" id="reacts"></div>
   </div>
@@ -304,11 +318,109 @@ const L_SHRIMPS = { n: 'Krevetky', e: '🦐', steps: [
   { n: 'Tykadla', c: '#ff9a6b', t: 'line', w: 8, d: 'M475,650 Q420,705 320,695 M478,655 Q470,725 390,728 ' + mirror('M475,650 Q420,705 320,695 M478,655 Q470,725 390,728') },
 ] };
 
+
+// ---------- v1.2 nové šablony ----------
+const HEART_L = 'M500,680 C300,560 150,430 170,280 C190,140 380,110 500,240 Q465,450 500,680 Z';
+const HEART_R = 'M500,240 C620,110 810,140 830,280 C850,430 700,560 500,680 Q465,450 500,240 Z';
+const L_CATS = { n: 'Kočičky', e: '😺', steps: [
+  { n: 'Šedá kočička', c: '#9aa5b1', t: 'fill', d: HEART_L + 'M195,250 L210,105 L315,175 Z' },
+  { n: 'Zrzavá kočička', c: '#ffa94d', t: 'fill', d: HEART_R + 'M805,250 L790,105 L685,175 Z' },
+  { n: 'Vnitřek oušek', c: '#ffb3c6', t: 'fill', d: 'M220,215 L228,145 L282,180 Z M780,215 L772,145 L718,180 Z' },
+  { n: 'Bříška', c: '#fff4e6', t: 'fill', d: rell(360,500,75,85) + rell(640,500,75,85) },
+  { n: 'Zavřená očka', c: '#2b2140', t: 'line', w: 9, d: 'M285,305 Q305,325 325,305 M385,305 Q405,325 425,305 M575,305 Q595,325 615,305 M675,305 Q695,325 715,305' },
+  { n: 'Čumáčky', c: '#ff6b9a', t: 'fill', d: 'M342,340 L368,340 L355,356 Z M632,340 L658,340 L645,356 Z' },
+  { n: 'Vousky', c: '#2b2140', t: 'line', w: 5, d: 'M300,350 L230,340 M300,365 L232,372 M410,350 L470,340 M410,365 L470,372 M590,350 L530,340 M590,365 L530,372 M700,350 L770,340 M700,365 L770,372' },
+  { n: 'Obrys', c: '#5c4b6b', t: 'line', w: 8, d: 'M500,680 C300,560 150,430 170,280 C190,140 380,110 500,240 C620,110 810,140 830,280 C850,430 700,560 500,680 Z' },
+] };
+function penguin(cx) { return { body: rell(cx,420,120,190), belly: rell(cx,485,80,122), eyes: circ(cx-30,330,18) + circ(cx+30,330,18), pup: circ(cx-27,333,8) + circ(cx+33,333,8), beak: `M${cx-16},358 L${cx+16},358 L${cx},384 Z `, feet: rell(cx-42,612,40,16) + rell(cx+42,612,40,16), cheeks: rell(cx-62,372,16,10) + rell(cx+62,372,16,10) }; }
+const PG1 = penguin(355), PG2 = penguin(645);
+const L_PENGUINS = { n: 'Tučňáci', e: '🐧', steps: [
+  { n: 'Tučňák 1', c: '#2d3142', t: 'fill', d: PG1.body },
+  { n: 'Tučňák 2', c: '#3d405b', t: 'fill', d: PG2.body },
+  { n: 'Bříška', c: '#eef4ff', t: 'fill', d: PG1.belly + PG2.belly },
+  { n: 'Očka', c: '#ffffff', t: 'fill', d: PG1.eyes + PG2.eyes },
+  { n: 'Zorničky', c: '#111111', t: 'fill', d: PG1.pup + PG2.pup },
+  { n: 'Zobáčky a nožičky', c: '#ff9f1c', t: 'fill', d: PG1.beak + PG2.beak + PG1.feet + PG2.feet },
+  { n: 'Tvářičky', c: '#ff8fab', t: 'fill', d: PG1.cheeks + PG2.cheeks },
+  { n: 'Srdíčko', c: '#ff5e7e', t: 'fill', d: 'M500,215 C470,190 450,170 462,150 C472,135 492,138 500,155 C508,138 528,135 538,150 C550,170 530,190 500,215 Z' },
+] };
+function avo(cx, deg) { return { skin: rell(cx,400,135,180,deg), flesh: rell(cx,410,108,150,deg), pit: circ(cx,470,55), shine: rell(cx-18,452,14,9,-30), eyes: circ(cx-35,355,10) + circ(cx+35,355,10), mouth: `M${cx-20},382 Q${cx},402 ${cx+20},382 `, cheeks: rell(cx-58,378,15,9) + rell(cx+58,378,15,9) }; }
+const AV1 = avo(340, 8), AV2 = avo(660, -8);
+const L_AVO = { n: 'Avokáda', e: '🥑', steps: [
+  { n: 'Slupky', c: '#4a7c2a', t: 'fill', d: AV1.skin + AV2.skin },
+  { n: 'Dužina', c: '#c5e17a', t: 'fill', d: AV1.flesh + AV2.flesh },
+  { n: 'Pecky', c: '#8b5a2b', t: 'fill', d: AV1.pit + AV2.pit },
+  { n: 'Odlesky pecek', c: '#c08552', t: 'fill', d: AV1.shine + AV2.shine },
+  { n: 'Očka', c: '#2b2140', t: 'fill', d: AV1.eyes + AV2.eyes },
+  { n: 'Pusinky', c: '#2b2140', t: 'line', w: 7, d: AV1.mouth + AV2.mouth },
+  { n: 'Tvářičky', c: '#ff8fab', t: 'fill', d: AV1.cheeks + AV2.cheeks },
+] };
+function cone(cx) { return { cone: `M${cx-72},400 L${cx+72},400 L${cx},690 Z `, grid: `M${cx-50},440 L${cx+30},560 M${cx-25},420 L${cx+50},440 M${cx+50},440 L${cx-30},560 M${cx+25},420 L${cx-50},440 `, scoop1: circ(cx,350,88), scoop2: circ(cx,235,70), drip: `M${cx-85},385 Q${cx-60},440 ${cx-40},395 Q${cx-15},460 ${cx+10},398 Q${cx+40},430 ${cx+60},395 Q${cx+80},420 ${cx+85},385 Z `, cherry: circ(cx,150,24), stem: `M${cx},128 Q${cx+10},95 ${cx+35},85 ` }; }
+const IC1 = cone(350), IC2 = cone(650);
+const L_ICE = { n: 'Zmrzliny', e: '🍦', steps: [
+  { n: 'Kornouty', c: '#e9b872', t: 'fill', d: IC1.cone + IC2.cone },
+  { n: 'Vzorek kornoutů', c: '#c48a3f', t: 'line', w: 8, d: IC1.grid + IC2.grid },
+  { n: 'Jahodové kopečky', c: '#ff8fab', t: 'fill', d: IC1.scoop1 + IC1.scoop2 },
+  { n: 'Šmoulové kopečky', c: '#8fd3ff', t: 'fill', d: IC2.scoop1 + IC2.scoop2 },
+  { n: 'Čokoládová poleva', c: '#7b3f00', t: 'fill', d: IC1.drip + IC2.drip },
+  { n: 'Posypka', c: '#ffd23f', t: 'line', w: 9, d: 'M320,320 L332,305 M372,345 L386,352 M335,375 L328,392 M630,225 L642,212 M672,250 L686,258 M612,330 L620,345 M680,320 L692,308 M345,210 L358,222' },
+  { n: 'Třešničky', c: '#e63946', t: 'fill', d: IC1.cherry + IC2.cherry },
+  { n: 'Stopky', c: '#3a5a40', t: 'line', w: 7, d: IC1.stem + IC2.stem },
+] };
+const arc = (r) => `M${500 - r},560 A${r},${r} 0 0,1 ${500 + r},560 `;
+const cloud = (cx) => circ(cx,560,62) + circ(cx-58,585,45) + circ(cx+58,585,45) + rell(cx,610,110,38);
+const L_RAINBOW = { n: 'Duha', e: '🌈', steps: [
+  { n: 'Červená', c: '#ff4d4d', t: 'line', w: 38, d: arc(300) },
+  { n: 'Oranžová', c: '#ff9f1c', t: 'line', w: 38, d: arc(260) },
+  { n: 'Žlutá', c: '#ffd23f', t: 'line', w: 38, d: arc(220) },
+  { n: 'Zelená', c: '#06d6a0', t: 'line', w: 38, d: arc(180) },
+  { n: 'Modrá', c: '#3a86ff', t: 'line', w: 38, d: arc(140) },
+  { n: 'Fialová', c: '#9b5de5', t: 'line', w: 38, d: arc(100) },
+  { n: 'Mráčky', c: '#dfe9ff', t: 'fill', d: cloud(240) + cloud(760) },
+  { n: 'Obličejíky', c: '#2b2140', t: 'line', w: 7, d: circ(220,590,4) + circ(262,590,4) + 'M228,612 Q241,624 254,612 ' + circ(740,590,4) + circ(782,590,4) + 'M748,612 Q761,624 774,612' },
+] };
+function frog(cx) { return { body: rell(cx,450,150,120) + circ(cx-72,335,46) + circ(cx+72,335,46), belly: rell(cx,490,92,70), eyes: circ(cx-72,330,28) + circ(cx+72,330,28), pup: circ(cx-68,334,13) + circ(cx+76,334,13), mouth: `M${cx-55},410 Q${cx},450 ${cx+55},410 `, cheeks: rell(cx-95,425,18,11) + rell(cx+95,425,18,11) }; }
+const FR1 = frog(300), FR2 = frog(700);
+const L_FROGS = { n: 'Žabky', e: '🐸', steps: [
+  { n: 'Levá žabka', c: '#6cc04a', t: 'fill', d: FR1.body },
+  { n: 'Pravá žabka', c: '#3fa34d', t: 'fill', d: FR2.body },
+  { n: 'Bříška', c: '#c8f0a0', t: 'fill', d: FR1.belly + FR2.belly },
+  { n: 'Očka', c: '#ffffff', t: 'fill', d: FR1.eyes + FR2.eyes },
+  { n: 'Zorničky', c: '#111111', t: 'fill', d: FR1.pup + FR2.pup },
+  { n: 'Pusinky', c: '#2b2140', t: 'line', w: 8, d: FR1.mouth + FR2.mouth },
+  { n: 'Tvářičky', c: '#ff8fab', t: 'fill', d: FR1.cheeks + FR2.cheeks },
+] };
+const L_BURGER = { n: 'Burger', e: '🍔', steps: [
+  { n: 'Horní houska', c: '#f4a259', t: 'fill', d: 'M250,360 Q250,170 500,170 Q750,170 750,360 Z' },
+  { n: 'Sezam', c: '#fff3c4', t: 'fill', d: rell(380,235,13,7,-20) + rell(470,205,13,7,10) + rell(560,225,13,7,-10) + rell(640,265,13,7,25) + rell(330,300,13,7,-35) + rell(660,320,13,7,30) },
+  { n: 'Salát', c: '#7bc950', t: 'line', w: 30, d: 'M240,385 Q280,415 320,385 Q360,415 400,385 Q440,415 480,385 Q520,415 560,385 Q600,415 640,385 Q680,415 720,385 Q745,400 760,388' },
+  { n: 'Sýr', c: '#ffd23f', t: 'fill', d: 'M250,405 L750,405 L720,445 L650,445 L620,485 L590,445 L380,445 L350,480 L320,445 L250,445 Z' },
+  { n: 'Maso', c: '#6b3e26', t: 'fill', d: 'M260,445 L740,445 Q770,445 770,485 Q770,525 740,525 L260,525 Q230,525 230,485 Q230,445 260,445 Z' },
+  { n: 'Spodní houska', c: '#e9964a', t: 'fill', d: 'M250,535 L750,535 Q760,625 700,625 L300,625 Q240,625 250,535 Z' },
+  { n: 'Obličej', c: '#2b2140', t: 'line', w: 9, d: circ(440,295,6) + circ(560,295,6) + 'M470,315 Q500,340 530,315' },
+] };
+const L_CACTI = { n: 'Kaktusy', e: '🌵', steps: [
+  { n: 'Kaktusy', c: '#5cb85c', t: 'fill', d: 'M330,470 L330,230 Q330,180 370,180 Q410,180 410,230 L410,470 Z M410,335 L462,335 Q482,335 482,315 L482,262 Q482,242 463,242 Q445,242 445,262 L445,302 L410,302 Z M330,385 L285,385 Q265,385 265,365 L265,320 Q265,300 283,300 Q300,300 300,320 L300,352 L330,352 Z ' + rell(630,385,78,98) },
+  { n: 'Pruhy', c: '#2f7d32', t: 'line', w: 7, d: 'M370,205 L370,455 M350,230 L350,450 M390,230 L390,450 M630,300 L630,470 M600,310 Q585,385 600,460 M660,310 Q675,385 660,460' },
+  { n: 'Květináče', c: '#d9734e', t: 'fill', d: 'M300,480 L440,480 L420,630 L320,630 Z M560,480 L700,480 L680,630 L580,630 Z' },
+  { n: 'Okraje', c: '#b85a3a', t: 'fill', d: 'M288,458 L452,458 L452,496 L288,496 Z M548,458 L712,458 L712,496 L548,496 Z' },
+  { n: 'Kytičky', c: '#ff8fab', t: 'fill', d: circ(370,172,20) + circ(352,160,14) + circ(388,160,14) + circ(630,285,20) + circ(612,272,14) + circ(648,272,14) },
+  { n: 'Obličejíky', c: '#2b2140', t: 'line', w: 7, d: circ(350,540,4) + circ(390,540,4) + 'M358,565 Q370,577 382,565 ' + circ(610,540,4) + circ(650,540,4) + 'M618,565 Q630,577 642,565' },
+] };
+
 const line1 = (n, d, c = '#2b2140') => [{ n, c, t: 'line', w: 12, d }];
 const TEMPLATES = {
   balloons: L_BALLOONS,
   otters: L_OTTERS,
   shrimps: L_SHRIMPS,
+  cats: L_CATS,
+  penguins: L_PENGUINS,
+  frogs: L_FROGS,
+  avocados: L_AVO,
+  icecream: L_ICE,
+  rainbow: L_RAINBOW,
+  burger: L_BURGER,
+  cacti: L_CACTI,
   cat:    { n: 'Kočka', e: '🐱', steps: [
     { n: 'Hlava a uši', c: '#ff9f1c', t: 'fill', d: ell(500, 420, 190, 160) + 'M345,330 L360,170 L450,270 Z M550,270 L640,170 L655,330 Z' },
     { n: 'Obličej', c: '#2b2140', t: 'line', w: 10, d: circ(430, 400, 22) + circ(570, 400, 22) + 'M485,460 L515,460 L500,480 Z M500,480 Q480,515 455,498 M500,480 Q520,515 545,498 M395,470 L270,450 M395,492 L270,505 M605,470 L730,450 M605,492 L730,505' } ] },
@@ -335,7 +447,8 @@ function saveMe() { try { localStorage.setItem('ap_me', JSON.stringify(me)); } c
 
 function cursorHTML(c, isMe) {
   const fs = SIZES[c.size] || 32;
-  return `<span class="ic anim-${esc(c.anim || 'none')}" style="font-size:${fs}px">${esc(c.emoji || '🖌️')}</span><span class="tag" style="background:${esc(c.color || '#7b5cff')}">${esc(c.name || '???')}${isMe ? ' (ty)' : ''}</span>`;
+  const bub = c.msg && c.mt && c.mt > now() - 5000 ? `<span class="bub" data-mt="${c.mt}">${esc(c.msg)}</span>` : '';
+  return bub + `<span class="ic anim-${esc(c.anim || 'none')}" style="font-size:${fs}px">${esc(c.emoji || '🖌️')}</span><span class="tag" style="background:${esc(c.color || '#7b5cff')}">${esc(c.name || '???')}${isMe ? ' (ty)' : ''}</span>`;
 }
 function renderLobbyPreview() { $('#lobbyPreview').innerHTML = `<div class="cur" style="position:relative;transform:none">${cursorHTML({ ...me, name: me.name || 'Ty' })}</div>`; }
 
@@ -486,7 +599,7 @@ const board = $('#board');
 function evPos(e) { const r = board.getBoundingClientRect(); return { nx: Math.round((e.clientX - r.left) / r.width * N), ny: Math.round((e.clientY - r.top) / r.height * N), px: e.clientX - r.left, py: e.clientY - r.top }; }
 function newStroke() {
   const st = meta.mode !== 'free' ? stepOf(meta.tpl, meta.step) : null;
-  return { u: uid || 'local', c: color, w: size, b: brush, sd: Math.floor(Math.random() * 1e9), p: [], l: meta.tpl, st: st ? meta.step : -1, k: (st && meta.mode === 'strict' && st.t === 'fill') ? 1 : 0 };
+  return { u: uid || 'local', n: (me.name || 'Anonym').slice(0, 16), e: me.emoji, c: color, w: size, b: brush, sd: Math.floor(Math.random() * 1e9), p: [], l: meta.tpl, st: st ? meta.step : -1, k: (st && meta.mode === 'strict' && st.t === 'fill') ? 1 : 0 };
 }
 function strictBlocked() { return meta.mode === 'strict' && !!maskData && brush !== 'eraser'; }
 let warnT = 0;
@@ -562,7 +675,11 @@ function confirmBox(text, yes) {
 }
 
 /* ---------- šablony & režimy ---------- */
-$('#tplGrid').innerHTML = Object.entries(TEMPLATES).map(([k, t]) => `<button class="tpl" data-tpl="${k}">${t.e}<small>${t.n}</small></button>`).join('');
+$('#tplGrid').innerHTML = Object.entries(TEMPLATES).map(([k, t]) => `<button class="tpl" data-tpl="${k}" title="${t.n}"><canvas width="160" height="120" data-thumb="${k}"></canvas><span class="cnt">${t.steps.length} kroků</span><small>${t.e} ${t.n}</small></button>`).join('');
+document.querySelectorAll('[data-thumb]').forEach(cv => {
+  const x = cv.getContext('2d'), key = cv.dataset.thumb; x.scale(160 / 1000, 120 / 750); x.lineCap = 'round'; x.lineJoin = 'round';
+  TEMPLATES[key].steps.forEach((st, i) => { const p = stepPath(key, i); if (st.t === 'fill') { x.fillStyle = st.c.toLowerCase() === '#ffffff' ? '#f4f0fa' : st.c; x.fill(p); } else { x.strokeStyle = st.c; x.lineWidth = Math.max(st.w, 10); x.stroke(p); } });
+});
 $('#tplGrid').onclick = (e) => {
   const b = e.target.closest('[data-tpl]'); if (!b) return; const key = b.dataset.tpl;
   const go = () => { clearStrokes(); setMeta({ tpl: key, step: 0, mode: meta.mode === 'free' ? 'guide' : meta.mode, run: Date.now() }); };
@@ -577,7 +694,6 @@ function advanceStep(from, manual) {
   const total = stepCount(meta.tpl); if (from >= total) return;
   if (online) runTransaction(ref(db, `${ROOT}/${room}/meta/step`), (v) => ((v ?? 0) === from ? from + 1 : v)).catch(() => { });
   else applyMeta({ ...meta, step: from + 1 });
-  if (!manual) toast('Krok hotový! ✅');
 }
 let metaInit = false;
 function applyMeta(m) {
@@ -589,9 +705,13 @@ function applyMeta(m) {
   if (changed || !metaInit) {
     redrawTemplate();
     const st = stepOf(meta.tpl, meta.step);
-    if (st && meta.mode !== 'free' && (prev.step !== meta.step || prev.tpl !== meta.tpl || !metaInit) && brush !== 'eraser') setColor(st.c, true);
+    if (st && meta.mode !== 'free' && (prev.step !== meta.step || prev.tpl !== meta.tpl || !metaInit)) {
+      if (brush !== 'eraser') setColor(st.c, true);
+      size = st.t === 'fill' ? Math.max(size, 18) : Math.min(40, Math.max(4, Math.round(st.w * 0.8))); $('#sizeRange').value = size;
+      if (metaInit && prev.tpl === meta.tpl && meta.step === prev.step + 1) { sfx('step'); toast(`Krok hotový! ✅ Teď: ${st.n}`); }
+    }
     const total = stepCount(meta.tpl);
-    if (metaInit && meta.mode !== 'free' && meta.step >= total && prev.step < total && prev.tpl === meta.tpl && !(meta.chEnd > now())) setTimeout(() => showScore('Hotovo! 🎉'), 400);
+    if (metaInit && meta.mode !== 'free' && meta.step >= total && prev.step < total && prev.tpl === meta.tpl && !(meta.chEnd > now())) { sfx('win'); setTimeout(() => showScore('Hotovo! 🎉'), 400); }
   }
   metaInit = true;
   $('#scoreBtn').classList.toggle('hidden', meta.mode === 'free');
@@ -659,8 +779,8 @@ function showScore(title) {
   const msg = ['Zkus to znova, dáš to! 💪', 'Dobrý začátek! 👍', 'Super práce! 🔥', 'Mistrovské dílo! 🏆'][st];
   $('#modalCard').innerHTML = `<h2 style="margin:0">${title || 'Hodnocení'} ${TEMPLATES[meta.tpl].e}</h2><div class="stars">${'⭐'.repeat(st)}${'☆'.repeat(3 - st)}</div><div class="big">${r.score} %</div>
    <p style="font-weight:700;color:var(--muted)">Vybarveno ${r.cov} % · Přesnost ${r.acc} %</p><p style="font-weight:800;font-size:18px">${msg}</p><p style="color:var(--muted);font-size:13px">Počítá se kresba všech v místnosti – týmová práce! 🤝</p>
-   <div class="row" style="justify-content:center"><button class="btn ghost" id="scSave">💾 Uložit</button><button class="btn" id="scOk">Pokračovat 🎨</button></div>`;
-  $('#modal').classList.remove('hidden'); $('#scOk').onclick = closeModal; $('#scSave').onclick = () => $('#saveBtn').click();
+   ${contribHTML()}<div class="row" style="justify-content:center"><button class="btn ghost" id="scGal">🖼️ Do galerie</button><button class="btn ghost" id="scSave">💾 Uložit</button><button class="btn" id="scOk">Pokračovat 🎨</button></div>`;
+  $('#modal').classList.remove('hidden'); $('#scOk').onclick = closeModal; $('#scSave').onclick = () => $('#saveBtn').click(); $('#scGal').onclick = (e) => { addToGallery(); e.target.disabled = true; e.target.textContent = '✅ V galerii'; };
   if (st >= 2) confetti();
 }
 $('#scoreBtn').onclick = () => showScore();
@@ -690,12 +810,13 @@ function sendReact(r) {
   if (online) { const rr = push(ref(db, `${ROOT}/${room}/react`)); set(rr, { r, x, y, t: now() }); setTimeout(() => remove(rr), 4000); }
   else showReact(r, x, y);
 }
-function showReact(r, x, y) { const el = document.createElement('div'); el.className = 'react'; el.textContent = r; el.style.left = (x / N * BOARD.w) + 'px'; el.style.top = (y / N * BOARD.h) + 'px'; $('#cursors').appendChild(el); setTimeout(() => el.remove(), 2300); }
+function showReact(r, x, y) { sfx('react'); const el = document.createElement('div'); el.className = 'react'; el.textContent = r; el.style.left = (x / N * BOARD.w) + 'px'; el.style.top = (y / N * BOARD.h) + 'px'; $('#cursors').appendChild(el); setTimeout(() => el.remove(), 2300); }
 
 /* ======================= KURZORY ======================= */
+let myMsg = { msg: '', mt: 0 };
 let myPos = { nx: -1, ny: -1 }; let lastCurSend = 0; let curTimer = null;
 const myCurEl = document.createElement('div'); myCurEl.className = 'cur me';
-function renderMyCursor() { myCurEl.innerHTML = cursorHTML(me, true); }
+function renderMyCursor() { myCurEl.innerHTML = cursorHTML({ ...me, ...myMsg }, true); }
 function moveMyCursor(p) {
   myPos = { nx: p.nx, ny: p.ny };
   if (!myCurEl.isConnected) $('#cursors').appendChild(myCurEl);
@@ -707,7 +828,7 @@ function moveMyCursor(p) {
 function hideMyCursor() { myCurEl.style.display = 'none'; myPos = { nx: -1, ny: -1 }; pushCursor(true); }
 function pushCursor(force) {
   if (!online || !room) return; const t = performance.now();
-  const doIt = () => { lastCurSend = performance.now(); set(ref(db, `${ROOT}/${room}/cursors/${uid}`), { x: myPos.nx, y: myPos.ny, name: me.name || 'Anonym', emoji: me.emoji, color: me.color, trail: me.trail, anim: me.anim, size: me.size, t: serverTimestamp() }).catch(() => { }); };
+  const doIt = () => { lastCurSend = performance.now(); set(ref(db, `${ROOT}/${room}/cursors/${uid}`), { x: myPos.nx, y: myPos.ny, name: me.name || 'Anonym', emoji: me.emoji, color: me.color, trail: me.trail, anim: me.anim, size: me.size, msg: myMsg.msg || '', mt: myMsg.mt || 0, t: serverTimestamp() }).catch(() => { }); };
   if (force || t - lastCurSend > 60) { clearTimeout(curTimer); doIt(); } else { clearTimeout(curTimer); curTimer = setTimeout(doIt, 60); }
 }
 const TRAIL_CHARS = { sparkle: ['✨', '⭐', '·'], hearts: ['💖', '💕', '💗'], fire: ['🔥', '✨'], bubble: ['🫧', '○'], stars: ['⭐', '🌟'], snow: ['❄️', '❅'] };
@@ -798,6 +919,51 @@ $('#shareBtn').onclick = async () => {
 renderLobbyPreview();
 const hashCode = location.hash.replace('#', '').trim();
 if (hashCode) { $('#codeIn').value = hashCode.toUpperCase(); $('#lobbyErr').style.color = '#7b5cff'; $('#lobbyErr').textContent = `Pozvánka do místnosti ${hashCode.toUpperCase()} – napiš jméno a klikni Připojit 🎉`; }
+
+/* ======================= v1.2 EXTRA ======================= */
+function sendMsg() {
+  const t = $('#msgIn').value.trim().slice(0, 40); if (!t || !room) return; $('#msgIn').value = '';
+  myMsg = { msg: t, mt: now() }; renderMyCursor();
+  if (myPos.nx < 0) { const r = board.getBoundingClientRect(); moveMyCursor({ nx: N / 2, ny: N / 2, px: r.width / 2, py: r.height / 2 }); }
+  pushCursor(true); sfx('pop');
+}
+$('#msgBtn').onclick = sendMsg; $('#msgIn').onkeydown = (e) => { if (e.key === 'Enter') sendMsg(); };
+// zvuky
+let soundOn = localStorage.getItem('ap_sound') !== '0'; let actx = null;
+$('#soundBtn').textContent = soundOn ? '🔊' : '🔇';
+$('#soundBtn').onclick = () => { soundOn = !soundOn; try { localStorage.setItem('ap_sound', soundOn ? '1' : '0'); } catch (e) { } $('#soundBtn').textContent = soundOn ? '🔊' : '🔇'; if (soundOn) sfx('pop'); };
+function sfx(kind) {
+  if (!soundOn) return; try { actx ||= new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+  const notes = { step: [660, 880], win: [523, 659, 784, 1047], pop: [520], react: [740] }[kind] || [600];
+  notes.forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'triangle'; o.frequency.value = f; const t = actx.currentTime + i * 0.11; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + 0.3); });
+}
+// kdo kolik kreslil
+function contribHTML() {
+  const c = {}; for (const s of strokes.values()) { if (s.b === 'eraser') continue; const k = s.u || '?'; c[k] ||= { n: s.n || 'Anonym', e: s.e || '🖌️', v: 0 }; c[k].v += (s.p || []).length / 2; }
+  const list = Object.values(c).sort((a, b) => b.v - a.v); const tot = list.reduce((a, b) => a + b.v, 0) || 1;
+  if (list.length < 1) return '';
+  return `<div class="contrib"><b>Kdo kolik nakreslil 🏅</b>${list.slice(0, 6).map((x, i) => `<div>${['🥇', '🥈', '🥉'][i] || '🎨'} ${esc(x.e)} ${esc(x.n)} <span class="bar" style="width:${Math.max(6, Math.round(x.v / tot * 120))}px"></span> ${Math.round(x.v / tot * 100)} %</div>`).join('')}</div>`;
+}
+// galerie
+function snapshotJPEG(w) {
+  const c = document.createElement('canvas'); c.width = w; c.height = Math.round(w * 0.75); const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(drawCv, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', 0.75);
+}
+function addToGallery() {
+  const item = { img: snapshotJPEG(360), tpl: meta.tpl, by: me.name || 'Anonym', t: now() };
+  if (online) push(ref(db, `${ROOT}/${room}/gallery`), item).then(() => toast('Uloženo do galerie 🖼️')).catch(() => toast('Galerie se neuložila 😕'));
+  else { localGallery.push(item); toast('Uloženo do galerie 🖼️'); }
+}
+const localGallery = [];
+$('#galBtn').onclick = async () => {
+  let items = localGallery.slice();
+  if (online) { try { const s = await get(ref(db, `${ROOT}/${room}/gallery`)); items = Object.values(s.val() || {}); } catch (e) { } }
+  items.sort((a, b) => b.t - a.t);
+  $('#modalCard').innerHTML = `<h2 style="margin:0">🖼️ Galerie místnosti ${esc(room)}</h2>
+   ${items.length ? `<div class="gal">${items.map(i => `<figure><img src="${esc(i.img)}" alt=""><figcaption>${esc((TEMPLATES[i.tpl] || {}).e || '🎨')} ${esc((TEMPLATES[i.tpl] || {}).n || 'Volná kresba')} · ${esc(i.by)}</figcaption></figure>`).join('')}</div>` : '<p style="color:var(--muted);font-weight:700">Zatím prázdno. Dokreslete šablonu a dejte ji do galerie! ✨</p>'}
+   <div class="row" style="justify-content:center"><button class="btn ghost" id="galAdd">➕ Přidat aktuální kresbu</button><button class="btn" id="galOk">Zavřít</button></div>`;
+  $('#modal').classList.remove('hidden'); $('#galOk').onclick = closeModal; $('#galAdd').onclick = () => { addToGallery(); closeModal(); };
+};
 
 /* ======================= KONFETY ======================= */
 function confetti() {
