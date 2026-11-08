@@ -187,6 +187,7 @@ label.lbl{display:block;font-weight:800;font-size:13px;text-transform:uppercase;
     <canvas id="tplCv"></canvas>
     <canvas id="drawCv"></canvas>
     <canvas id="liveCv"></canvas>
+    <canvas id="topCv" style="pointer-events:none"></canvas>
     <div id="cursors"></div>
     <div id="strictWarn">Jen po čarách šablony! ✋</div>
     <div id="stepChip">1/8</div>
@@ -484,7 +485,7 @@ const unsub = [];
 let brush = 'pen', color = '#2b2140', size = 8;
 
 const BOARD = { w: 800, h: 600, dpr: 1 };
-const tplCv = $('#tplCv'), drawCv = $('#drawCv'), liveCv = $('#liveCv');
+const tplCv = $('#tplCv'), drawCv = $('#drawCv'), liveCv = $('#liveCv'), topCv = $('#topCv'); const octx = topCv.getContext('2d');
 const tctx = tplCv.getContext('2d'), dctx = drawCv.getContext('2d'), lctx = liveCv.getContext('2d');
 
 function layout() {
@@ -494,7 +495,7 @@ function layout() {
   w = Math.max(200, Math.floor(w)); h = Math.floor(w * 0.75);
   const b = $('#board'); b.style.width = w + 'px'; b.style.height = h + 'px';
   BOARD.w = w; BOARD.h = h; BOARD.dpr = Math.min(2, window.devicePixelRatio || 1);
-  for (const cv of [tplCv, drawCv, liveCv]) { cv.width = w * BOARD.dpr; cv.height = h * BOARD.dpr; }
+  for (const cv of [tplCv, drawCv, liveCv, topCv]) { cv.width = w * BOARD.dpr; cv.height = h * BOARD.dpr; }
   redrawTemplate(); redrawAll(); redrawLive();
 }
 window.addEventListener('resize', () => { if (room) layout(); });
@@ -506,15 +507,16 @@ function hatch(color) {
   return p;
 }
 function redrawTemplate() {
-  const W = tplCv.width, H = tplCv.height; tctx.clearRect(0, 0, W, H);
+  const W = tplCv.width, H = tplCv.height; tctx.clearRect(0, 0, W, H); octx.clearRect(0, 0, W, H);
   updateStepUI();
   const T = TEMPLATES[meta.tpl]; if (!T || meta.mode === 'free') { buildMask(); return; }
   tctx.save(); tctx.scale(W / 1000, H / 750); tctx.lineCap = 'round'; tctx.lineJoin = 'round';
   // náhled celého obrázku (budoucí kroky) jemně šedě
   for (let i = meta.step + 1; i < T.steps.length; i++) {
     const st = T.steps[i], p = stepPath(meta.tpl, i);
-    tctx.setLineDash([3, 10]); tctx.strokeStyle = 'rgba(140,130,160,.35)';
-    tctx.lineWidth = st.t === 'line' ? Math.min(st.w, 6) : 3; tctx.stroke(p);
+    octx.save(); octx.scale(W / 1000, H / 750); octx.lineCap = 'round';
+    octx.setLineDash([3, 10]); octx.strokeStyle = 'rgba(255,255,255,.7)'; octx.lineWidth = 6; octx.stroke(p);
+    octx.strokeStyle = 'rgba(120,110,145,.55)'; octx.lineWidth = 3; octx.stroke(p); octx.restore();
   }
   const st = stepOf(meta.tpl, meta.step);
   if (st) {
@@ -523,11 +525,15 @@ function redrawTemplate() {
     if (st.t === 'fill') {
       tctx.globalAlpha = 0.18; tctx.fillStyle = guideCol; tctx.fill(p); tctx.globalAlpha = 1;
       tctx.fillStyle = tctx.createPattern(hatch(guideCol), 'repeat'); tctx.fill(p);
-      tctx.setLineDash([6, 8]); tctx.strokeStyle = guideCol; tctx.lineWidth = 4; tctx.stroke(p);
     } else {
       tctx.globalAlpha = 0.28; tctx.strokeStyle = guideCol; tctx.lineWidth = st.w; tctx.stroke(p); tctx.globalAlpha = 1;
-      tctx.setLineDash([4, 12]); tctx.strokeStyle = guideCol; tctx.lineWidth = Math.max(3, st.w / 5); tctx.stroke(p);
     }
+    // obrys aktuálního kroku vždy NAHOŘE (je vidět i přes namalovanou barvu)
+    octx.save(); octx.scale(W / 1000, H / 750); octx.lineCap = 'round'; octx.lineJoin = 'round';
+    const dash = st.t === 'fill' ? [10, 9] : [4, 12], lw = st.t === 'fill' ? 4 : Math.max(3, st.w / 5);
+    octx.setLineDash(dash); octx.strokeStyle = '#ffffff'; octx.lineWidth = lw + 4; octx.stroke(p);
+    octx.strokeStyle = '#2b2140'; octx.globalAlpha = 0.75; octx.lineWidth = lw; octx.stroke(p);
+    octx.restore();
   }
   tctx.restore();
   buildMask();
